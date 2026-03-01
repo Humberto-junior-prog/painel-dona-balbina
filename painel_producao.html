@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Produção - Dona Balbina</title>
+    <style>
+        /* =========================================
+           1. ESTILOS GERAIS (CSS)
+           ========================================= */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            box-sizing: border-box;
+        }
+        
+        /* Cabeçalho Fixo no topo */
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+            color: #222;
+            font-size: 28px;
+            text-transform: uppercase;
+        }
+        .data-atual {
+            color: #666;
+            font-size: 18px;
+            text-transform: capitalize;
+            margin-bottom: 15px;
+        }
+
+        /* Indicador Visual de Turno (Não é mais um botão) */
+        .indicador-turno {
+            display: inline-block;
+            color: white;
+            padding: 12px 25px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            /* Transição suave de cor sem efeito de hover/clique */
+            transition: background-color 0.3s; 
+        }
+        .indicador-turno.manha { background-color: #FF8C00; } 
+        .indicador-turno.tarde { background-color: #4B0082; } 
+
+        /* =========================================
+           2. ESTRUTURA DA TABELA UNIFICADA
+           ========================================= */
+        .container-tabela {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden; 
+        }
+
+        table.producao {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed; 
+        }
+
+        /* Larguras das Colunas */
+        table.producao th.col-produto { width: 30%; text-align: left; }
+        table.producao th.col-meta { width: 15%; text-align: center; }
+        table.producao th.col-acao { width: 35%; text-align: center; }
+        table.producao th.col-separar { width: 20%; text-align: center; }
+
+        table.producao th {
+            padding: 15px;
+            font-size: 16px;
+            color: #444;
+        }
+
+        /* Telhados Dinâmicos (Cores Base) */
+        table.producao th.header-agora {
+            background-color: #FF8C00; 
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: background-color 0.3s; 
+        }
+        table.producao th.header-depois {
+            background-color: #007BFF; 
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        /* Muralha Divisória Vertical */
+        table.producao th.col-separar, 
+        table.producao td.col-separar {
+            border-left: 5px solid #333; 
+        }
+
+        /* Linhas e Células */
+        table.producao tbody tr {
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+        }
+        table.producao td {
+            padding: 20px 15px;
+            font-size: 18px;
+        }
+
+        /* Cores de Fundo das Áreas */
+        table.producao td.col-acao { background-color: #FFFAEE; } 
+        table.producao td.col-separar { background-color: #F0F8FF; } 
+
+        .nome-produto {
+            font-size: 20px;
+            font-weight: bold;
+            color: #222;
+        }
+
+        /* Status Concluído */
+        table.producao tr.concluido { background-color: #d4edda; }
+        table.producao tr.concluido .nome-produto { text-decoration: line-through; color: #155724; }
+
+        .qtd-meta { font-weight: bold; color: #007BFF; font-size: 20px; }
+        .texto-zero { color: #aaa; font-style: italic; font-size: 16px; }
+
+        /* =========================================
+           3. BOTÃO DE AÇÃO
+           ========================================= */
+        .btn-acao {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            background-color: #007BFF; 
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn-acao:active { transform: scale(0.95); }
+        .btn-acao.concluido { background-color: #28a745; }
+        .btn-acao.desfazer { background-color: #6c757d; }
+
+        .footer { text-align: center; margin-top: 30px; padding: 20px 0; }
+        .btn-reset {
+            background-color: #dc3545; color: white; border: none;
+            padding: 10px 20px; border-radius: 5px; cursor: pointer; opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>PRODUÇÃO DONA BALBINA</h1>
+        <div class="data-atual" id="data-display"></div>
+        <div id="indicador-turno" class="indicador-turno">Calculando turno...</div>
+    </div>
+
+    <div class="container-tabela">
+        <table class="producao">
+            <thead>
+                <tr>
+                    <th colspan="1" class="col-produto"></th>
+                    <th colspan="2" class="header-agora" id="titulo-operacao">🔥 OPERAÇÃO DO TURNO</th>
+                    <th colspan="1" class="header-depois col-separar" id="titulo-preparacao">❄️ PREPARAÇÃO</th>
+                </tr>
+                <tr>
+                    <th class="col-produto">PRODUTO</th>
+                    <th class="col-meta">Meta (Assar)</th>
+                    <th class="col-acao">AÇÃO (Assar Agora) 👈 Clique</th>
+                    <th class="col-separar">Próximo Turno (Freezer)</th>
+                </tr>
+            </thead>
+            <tbody id="lista-producao">
+                </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        <button class="btn-reset" onclick="resetarChecklist()">Resetar Checklist do Turno Atual</button>
+    </div>
+
+    <script>
+        let turnoAtual = ''; // O sistema vai definir isso sozinho ao carregar
+        let hoje = new Date();
+
+        /* DADOS DA PLANILHA DE PRODUÇÃO */
+        const produtos = [
+            { id: 1, nome: "Baguete Parmesão", metasManha: [14, 14, 14, 14, 14, 28, 28], metasTarde: [0, 28, 28, 28, 28, 42, 0] },
+            { id: 2, nome: "Baguete Provolone", metasManha: [0, 14, 14, 14, 14, 28, 28], metasTarde: [0, 28, 28, 28, 28, 28, 0] },
+            { id: 3, nome: "Baguete Alho", metasManha: [0, 14, 14, 14, 14, 14, 14], metasTarde: [0, 14, 14, 14, 14, 14, 0] },
+            { id: 4, nome: "Pão de Batata", metasManha: [16, 16, 16, 16, 16, 16, 16], metasTarde: [0, 16, 16, 16, 16, 16, 0] },
+            { id: 5, nome: "Brioche", metasManha: [0, 16, 16, 16, 16, 16, 16], metasTarde: [0, 16, 16, 16, 16, 16, 0] },
+            { id: 6, nome: "Broa de Milho", metasManha: [0, 16, 16, 16, 16, 16, 16], metasTarde: [0, 16, 16, 16, 16, 16, 0] },
+            { id: 7, nome: "Pão Francês Integral", metasManha: [14, 14, 14, 14, 14, 14, 14], metasTarde: [0, 14, 14, 14, 14, 14, 0] },
+            { id: 8, nome: "Pão Doce Simples", metasManha: [0, 0, 0, 0, 0, 0, 0], metasTarde: [0, 0, 0, 0, 0, 0, 0] }, 
+            { id: 9, nome: "Pão Doce Coco", metasManha: [0, 0, 0, 0, 0, 0, 0], metasTarde: [0, 0, 0, 0, 0, 0, 0] }
+        ];
+
+        /* MEMÓRIAS INDEPENDENTES DOS TURNOS */
+        const checklist = {
+            'manha': { 'id_1': false, 'id_2': false, 'id_3': false, 'id_4': false, 'id_5': false, 'id_6': false, 'id_7': false, 'id_8': false, 'id_9': false },
+            'tarde': { 'id_1': false, 'id_2': false, 'id_3': false, 'id_4': false, 'id_5': false, 'id_6': false, 'id_7': false, 'id_8': false, 'id_9': false }
+        };
+
+        function exibirData() {
+            const display = document.getElementById('data-display');
+            const opcoes = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            display.textContent = hoje.toLocaleDateString('pt-BR', opcoes);
+        }
+
+        /* =========================================
+           O "CÉREBRO" DO HORÁRIO (Automação de Turno)
+           ========================================= */
+        function verificarHorarioETurno() {
+            const hora = hoje.getHours();
+            const minuto = hoje.getMinutes();
+            let turnoCalculado = 'manha'; // Padrão
+
+            // Regra da TARDE: Entre 14:30 e 22:59
+            if ((hora === 14 && minuto >= 30) || (hora > 14 && hora < 23)) {
+                turnoCalculado = 'tarde';
+            } else {
+                // Regra da MANHÃ: Todo o resto (das 23:00 até as 14:29)
+                turnoCalculado = 'manha';
+            }
+
+            // Se o turno tiver acabado de mudar, atualiza a interface
+            if (turnoAtual !== turnoCalculado) {
+                turnoAtual = turnoCalculado;
+                atualizarSeloVisual();
+                renderizarTelas();
+            }
+        }
+
+        function atualizarSeloVisual() {
+            const indicador = document.getElementById('indicador-turno');
+            if (turnoAtual === 'manha') {
+                indicador.textContent = 'Turno: MANHÃ';
+                indicador.className = 'indicador-turno manha';
+            } else {
+                indicador.textContent = 'Turno: TARDE';
+                indicador.className = 'indicador-turno tarde';
+            }
+        }
+
+        function renderizarTelas() {
+            const container = document.getElementById('lista-producao');
+            container.innerHTML = ''; 
+
+            const tituloOperacao = document.getElementById('titulo-operacao');
+            const tituloPreparacao = document.getElementById('titulo-preparacao');
+
+            const diaAtual = hoje.getDay(); 
+            const diaSeguinte = (diaAtual + 1) % 7; 
+
+            /* ATUALIZAÇÃO DOS TEXTOS E CORES DOS TELHADOS */
+            if (turnoAtual === 'manha') {
+                tituloOperacao.textContent = '🔥 OPERAÇÃO DO TURNO (MANHÃ)';
+                tituloOperacao.style.backgroundColor = '#FF8C00'; // Laranja
+                tituloPreparacao.textContent = '❄️ PREPARAÇÃO (TARDE)';
+            } else {
+                tituloOperacao.textContent = '🔥 OPERAÇÃO DO TURNO (TARDE)';
+                tituloOperacao.style.backgroundColor = '#4B0082'; // Roxo
+                tituloPreparacao.textContent = '❄️ PREPARAÇÃO (MANHÃ)';
+            }
+
+            produtos.forEach((produto, index) => {
+                let metaAssar = 0;
+                let metaSeparar = 0;
+                const statusFeito = checklist[turnoAtual][`id_${produto.id}`];
+
+                if (turnoAtual === 'manha') {
+                    metaAssar = produto.metasManha[diaAtual]; 
+                    metaSeparar = produto.metasTarde[diaAtual]; 
+                } else {
+                    metaAssar = produto.metasTarde[diaAtual]; 
+                    metaSeparar = produto.metasManha[diaSeguinte]; 
+                }
+
+                const tr = document.createElement('tr');
+                if (statusFeito) tr.className = 'concluido'; 
+
+                const tdProduto = `<td class="col-produto"><span class="nome-produto">${produto.nome}</span></td>`;
+
+                let tdMeta = '<td class="col-meta">';
+                if (metaAssar > 0) {
+                    tdMeta += `<span class="qtd-meta">${metaAssar} un.</span> ➡️`;
+                } else {
+                    tdMeta += `<span class="texto-zero">-</span>`;
+                }
+                tdMeta += '</td>';
+
+                let tdAcao = '<td class="col-acao">';
+                if (metaAssar > 0) {
+                    const textoBotao = statusFeito ? 'Desfazer' : 'Assado';
+                    const classeBotao = statusFeito ? 'btn-acao desfazer' : 'btn-acao';
+                    tdAcao += `<button class="${classeBotao}" onclick="marcarFeito(${produto.id})">${textoBotao}</button>`;
+                } else {
+                    tdAcao += `<span class="texto-zero">-</span>`; 
+                }
+                tdAcao += '</td>';
+
+                let tdSeparar = '<td class="col-separar">';
+                if (metaSeparar > 0) {
+                    tdSeparar += `Separar: <strong>${metaSeparar} un.</strong>`;
+                } else {
+                    tdSeparar += `<span class="texto-zero">-</span>`;
+                }
+                tdSeparar += '</td>';
+
+                tr.innerHTML = tdProduto + tdMeta + tdAcao + tdSeparar;
+                container.appendChild(tr);
+            });
+        }
+
+        function marcarFeito(produtoId) {
+            checklist[turnoAtual][`id_${produtoId}`] = !checklist[turnoAtual][`id_${produtoId}`];
+            renderizarTelas(); 
+        }
+
+        function resetarChecklist() {
+            if (confirm("Deseja resetar o checklist da ação principal de hoje?")) {
+                for (let key in checklist[turnoAtual]) {
+                    checklist[turnoAtual][key] = false;
+                }
+                renderizarTelas();
+            }
+        }
+
+        // INICIALIZAÇÃO
+        exibirData(); 
+        verificarHorarioETurno(); // Define o turno automaticamente ao abrir a página
+
+        // A MÁGICA TEMPORAL: Verifica o relógio a cada 1 minuto (60000 ms)
+        setInterval(() => {
+            hoje = new Date(); // Pega a hora exata naquele minuto
+            exibirData(); // Atualiza o texto da data, caso tenha virado meia-noite
+            verificarHorarioETurno(); // Verifica se precisa virar a chave do turno
+        }, 60000);
+
+    </script>
+</body>
+</html>
