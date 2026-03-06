@@ -17,7 +17,6 @@
             box-sizing: border-box;
         }
         
-        /* Cabeçalho Fixo no topo */
         .header {
             text-align: center;
             margin-bottom: 25px;
@@ -39,7 +38,6 @@
             margin-bottom: 15px;
         }
 
-        /* Indicador Visual de Turno (Não é mais um botão) */
         .indicador-turno {
             display: inline-block;
             color: white;
@@ -48,7 +46,6 @@
             font-weight: bold;
             border-radius: 25px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            /* Transição suave de cor sem efeito de hover/clique */
             transition: background-color 0.3s; 
         }
         .indicador-turno.manha { background-color: #FF8C00; } 
@@ -70,7 +67,6 @@
             table-layout: fixed; 
         }
 
-        /* Larguras das Colunas */
         table.producao th.col-produto { width: 30%; text-align: left; }
         table.producao th.col-meta { width: 15%; text-align: center; }
         table.producao th.col-acao { width: 35%; text-align: center; }
@@ -82,7 +78,6 @@
             color: #444;
         }
 
-        /* Telhados Dinâmicos (Cores Base) */
         table.producao th.header-agora {
             background-color: #FF8C00; 
             color: white;
@@ -99,23 +94,20 @@
             text-transform: uppercase;
         }
 
-        /* Muralha Divisória Vertical */
         table.producao th.col-separar, 
         table.producao td.col-separar {
             border-left: 5px solid #333; 
         }
 
-        /* Linhas e Células */
         table.producao tbody tr {
             border-bottom: 1px solid #eee;
             transition: background-color 0.2s;
         }
         table.producao td {
-            padding: 20px 15px;
+            padding: 15px;
             font-size: 18px;
         }
 
-        /* Cores de Fundo das Áreas */
         table.producao td.col-acao { background-color: #FFFAEE; } 
         table.producao td.col-separar { background-color: #F0F8FF; } 
 
@@ -125,7 +117,6 @@
             color: #222;
         }
 
-        /* Status Concluído */
         table.producao tr.concluido { background-color: #d4edda; }
         table.producao tr.concluido .nome-produto { text-decoration: line-through; color: #155724; }
 
@@ -136,7 +127,7 @@
            3. BOTÃO DE AÇÃO
            ========================================= */
         .btn-acao {
-            padding: 15px 30px;
+            padding: 12px 25px;
             font-size: 18px;
             font-weight: bold;
             border: none;
@@ -178,7 +169,7 @@
                     <th class="col-produto">PRODUTO</th>
                     <th class="col-meta">Meta (Assar)</th>
                     <th class="col-acao">AÇÃO (Assar Agora) 👈 Clique</th>
-                    <th class="col-separar">Próximo Turno (Freezer)</th>
+                    <th class="col-separar">Separar para Freezer</th>
                 </tr>
             </thead>
             <tbody id="lista-producao">
@@ -194,25 +185,40 @@
         let turnoAtual = ''; 
         let hoje = new Date();
 
-        /* DADOS ATUALIZADOS DA PLANILHA DE PRODUÇÃO 
-           Formato: [Dom, Seg, Ter, Qua, Qui, Sex, Sab] */
+        /* DADOS DA PLANILHA (19 Produtos) 
+           Formato: [Dom(0), Seg(1), Ter(2), Qua(3), Qui(4), Sex(5), Sab(6)] 
+           Onde havia 'X' na planilha, está como 0 */
         const produtos = [
-            { id: 1, nome: "Baguete Parmesão", metasManha: [14, 14, 14, 14, 14, 28, 28], metasTarde: [0, 14, 28, 14, 28, 28, 0] },
-            { id: 2, nome: "Baguete Provolone", metasManha: [0, 14, 14, 14, 14, 28, 28], metasTarde: [0, 14, 28, 14, 28, 28, 0] },
-            { id: 3, nome: "Cervejinha", metasManha: [0, 14, 14, 14, 14, 14, 14], metasTarde: [0, 14, 14, 14, 14, 14, 0] },
-            { id: 4, nome: "Pão de Batata", metasManha: [16, 16, 16, 16, 16, 16, 16], metasTarde: [0, 16, 16, 16, 16, 16, 0] },
-            { id: 5, nome: "Brioche", metasManha: [0, 16, 16, 16, 16, 16, 16], metasTarde: [0, 16, 16, 16, 16, 16, 0] },
-            { id: 6, nome: "Broa de Milho", metasManha: [0, 16, 16, 16, 16, 16, 16], metasTarde: [0, 16, 16, 16, 16, 16, 0] },
-            { id: 7, nome: "Pão Francês Integral", metasManha: [14, 14, 14, 14, 14, 14, 14], metasTarde: [0, 14, 14, 14, 14, 14, 0] },
-            { id: 8, nome: "Pão Doce Simples", metasManha: [14, 14, 14, 14, 14, 14, 14], metasTarde: [0, 14, 14, 14, 14, 14, 0] }, 
-            { id: 9, nome: "Pão Doce Coco", metasManha: [0, 14, 14, 14, 14, 14, 14], metasTarde: [0, 14, 14, 14, 14, 14, 0] }
+            { id: 1, nome: "Baguete Parmesão", metasManha: [15, 8, 15, 8, 15, 28, 28], metasTarde: [0, 15, 30, 15, 30, 30, 0] },
+            { id: 2, nome: "Baguete Provolone", metasManha: [0, 8, 15, 8, 15, 28, 28], metasTarde: [0, 15, 30, 15, 30, 30, 0] },
+            { id: 3, nome: "Baguete Gergelim", metasManha: [0, 5, 5, 5, 5, 5, 5], metasTarde: [0, 0, 0, 0, 0, 0, 0] },
+            { id: 4, nome: "Cervejinha", metasManha: [0, 8, 8, 8, 8, 8, 8], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
+            { id: 5, nome: "Pão de Batata", metasManha: [8, 8, 8, 8, 8, 8, 8], metasTarde: [0, 8, 8, 8, 8, 8, 0] },
+            { id: 6, nome: "Brioche", metasManha: [0, 8, 8, 8, 8, 8, 8], metasTarde: [0, 16, 16, 16, 16, 16, 0] },
+            { id: 7, nome: "Broa de Milho", metasManha: [0, 8, 8, 8, 8, 8, 16], metasTarde: [0, 8, 8, 8, 8, 8, 0] },
+            { id: 8, nome: "Pão Francês Integral", metasManha: [15, 15, 15, 15, 15, 15, 15], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
+            { id: 9, nome: "Pão Mini Hot Dog", metasManha: [0, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
+            { id: 10, nome: "Pão Suíço", metasManha: [0, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
+            { id: 11, nome: "Pão Suíço s/ Açúcar", metasManha: [0, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
+            { id: 12, nome: "Pão Doce Simples", metasManha: [15, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
+            { id: 13, nome: "Pão Doce Coco", metasManha: [0, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
+            { id: 14, nome: "Pão Doce c/ Doce de Leite", metasManha: [0, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
+            { id: 15, nome: "Pão Doce c/ Goiabada", metasManha: [0, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
+            { id: 16, nome: "Assado Salsicha", metasManha: [0, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
+            { id: 17, nome: "Assado Frango", metasManha: [0, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
+            { id: 18, nome: "Assado Presunto", metasManha: [0, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
+            { id: 19, nome: "Assado Mortadela", metasManha: [0, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] }
         ];
 
-        /* MEMÓRIAS INDEPENDENTES DOS TURNOS */
+        /* MEMÓRIA DE CHECKLIST EXTENDIDA PARA 19 ITENS */
         const checklist = {
-            'manha': { 'id_1': false, 'id_2': false, 'id_3': false, 'id_4': false, 'id_5': false, 'id_6': false, 'id_7': false, 'id_8': false, 'id_9': false },
-            'tarde': { 'id_1': false, 'id_2': false, 'id_3': false, 'id_4': false, 'id_5': false, 'id_6': false, 'id_7': false, 'id_8': false, 'id_9': false }
+            'manha': {},
+            'tarde': {}
         };
+        for(let i=1; i<=19; i++) {
+            checklist['manha'][`id_${i}`] = false;
+            checklist['tarde'][`id_${i}`] = false;
+        }
 
         function exibirData() {
             const display = document.getElementById('data-display');
@@ -220,9 +226,7 @@
             display.textContent = hoje.toLocaleDateString('pt-BR', opcoes);
         }
 
-        /* =========================================
-           O "CÉREBRO" DO HORÁRIO (Automação de Turno)
-           ========================================= */
+        /* O "CÉREBRO" DO HORÁRIO E DO TURNO */
         function verificarHorarioETurno() {
             const hora = hoje.getHours();
             const minuto = hoje.getMinutes();
@@ -232,7 +236,6 @@
             if ((hora === 14 && minuto >= 30) || (hora > 14 && hora < 23)) {
                 turnoCalculado = 'tarde';
             } else {
-                // Regra da MANHÃ: Todo o resto (das 23:00 até as 14:29)
                 turnoCalculado = 'manha';
             }
 
@@ -261,30 +264,68 @@
             const tituloOperacao = document.getElementById('titulo-operacao');
             const tituloPreparacao = document.getElementById('titulo-preparacao');
 
-            const diaAtual = hoje.getDay(); 
+            const diaAtual = hoje.getDay(); // 0: Dom, 1: Seg... 6: Sáb
             const diaSeguinte = (diaAtual + 1) % 7; 
+
+            /* LÓGICA DO PULO DE TURNO (LOOK-AHEAD) PARA FINAIS DE SEMANA */
+            let diaPreparacao = diaAtual;
+            let turnoPreparacao = 'tarde';
+            let tituloTelhadoAzul = '❄️ PREPARAÇÃO (TARDE)';
 
             if (turnoAtual === 'manha') {
                 tituloOperacao.textContent = '🔥 OPERAÇÃO DO TURNO (MANHÃ)';
                 tituloOperacao.style.backgroundColor = '#FF8C00'; 
-                tituloPreparacao.textContent = '❄️ PREPARAÇÃO (TARDE)';
+                
+                // Exceções do Final de Semana
+                if (diaAtual === 6) { // Se for Sábado de Manhã
+                    diaPreparacao = 0; // Pula para mostrar a Manhã de Domingo
+                    turnoPreparacao = 'manha';
+                    tituloTelhadoAzul = '❄️ PREPARAR P/ DOMINGO (MANHÃ)';
+                } else if (diaAtual === 0) { // Se for Domingo de Manhã
+                    diaPreparacao = 1; // Pula para mostrar a Manhã de Segunda
+                    turnoPreparacao = 'manha';
+                    tituloTelhadoAzul = '❄️ PREPARAR P/ SEGUNDA (MANHÃ)';
+                } else {
+                    diaPreparacao = diaAtual;
+                    turnoPreparacao = 'tarde';
+                    tituloTelhadoAzul = '❄️ PREPARAR P/ HOJE (TARDE)';
+                }
+
             } else {
                 tituloOperacao.textContent = '🔥 OPERAÇÃO DO TURNO (TARDE)';
                 tituloOperacao.style.backgroundColor = '#4B0082'; 
-                tituloPreparacao.textContent = '❄️ PREPARAÇÃO (MANHÃ)';
+                
+                // À tarde, sempre prepara a manhã do dia seguinte
+                diaPreparacao = diaSeguinte;
+                turnoPreparacao = 'manha';
+                tituloTelhadoAzul = '❄️ PREPARAR P/ AMANHÃ (MANHÃ)';
             }
 
-            produtos.forEach((produto, index) => {
+            // Atualiza o texto do telhado azul
+            tituloPreparacao.textContent = tituloTelhadoAzul;
+
+            produtos.forEach((produto) => {
                 let metaAssar = 0;
                 let metaSeparar = 0;
                 const statusFeito = checklist[turnoAtual][`id_${produto.id}`];
 
+                // Puxa o que tem que assar AGORA
                 if (turnoAtual === 'manha') {
                     metaAssar = produto.metasManha[diaAtual]; 
-                    metaSeparar = produto.metasTarde[diaAtual]; 
                 } else {
                     metaAssar = produto.metasTarde[diaAtual]; 
-                    metaSeparar = produto.metasManha[diaSeguinte]; 
+                }
+
+                // Puxa o que tem que separar usando o guarda de trânsito (Pulo de turno)
+                if (turnoPreparacao === 'manha') {
+                    metaSeparar = produto.metasManha[diaPreparacao];
+                } else {
+                    metaSeparar = produto.metasTarde[diaPreparacao];
+                }
+
+                // Esconder produtos que são 0 tanto para assar quanto para separar (Limpa a tela!)
+                if (metaAssar === 0 && metaSeparar === 0) {
+                    return; // Pula este produto e vai para o próximo
                 }
 
                 const tr = document.createElement('tr');
