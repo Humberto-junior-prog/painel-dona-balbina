@@ -8,22 +8,34 @@
         /* =========================================
            1. ESTILOS GERAIS (CSS)
            ========================================= */
+        * {
+            box-sizing: border-box; /* Garante que os tamanhos não quebrem a tela */
+        }
+
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f9;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             color: #333;
-            box-sizing: border-box;
+            
+            /* MÁGICA 1: TELA CHEIA E TRAVADA */
+            height: 100vh; /* Ocupa 100% da altura da tela */
+            height: 100dvh; /* Suporte extra para navegadores de celular */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Proíbe a página inteira de rolar */
         }
         
         .header {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
             background: white;
-            padding: 20px;
+            padding: 15px;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            
+            flex-shrink: 0; /* Protege o cabeçalho para ele não encolher */
         }
         .header h1 {
             margin: 0 0 10px 0;
@@ -41,7 +53,7 @@
         .indicador-turno {
             display: inline-block;
             color: white;
-            padding: 12px 25px;
+            padding: 10px 25px;
             font-size: 18px;
             font-weight: bold;
             border-radius: 25px;
@@ -58,7 +70,11 @@
             background: white;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            overflow: hidden; 
+            
+            /* MÁGICA 2: ROLAGEM INDEPENDENTE DA TABELA */
+            flex-grow: 1; /* Pega todo o espaço que sobrou da tela */
+            overflow-y: auto; /* Cria a barra de rolagem APENAS aqui dentro */
+            margin-bottom: 10px;
         }
 
         table.producao {
@@ -67,10 +83,28 @@
             table-layout: fixed; 
         }
 
+        /* MÁGICA 3: O EFEITO ÍMÃ (STICKY) */
+        table.producao thead {
+            position: sticky;
+            top: 0;
+            z-index: 10; /* Garante que os títulos fiquem por cima dos pães */
+        }
+
+/* Pintando o "vidro transparente" do canto superior esquerdo de branco */
+        table.producao thead tr:first-child th.col-produto {
+            background-color: white;
+        }
+        
+        /* Fundo sólido para a segunda linha de títulos não ficar transparente */
+        table.producao thead tr:nth-child(2) th {
+            background-color: #f0f0f5; 
+            border-bottom: 2px solid #ccc;
+        }
+
         table.producao th.col-produto { width: 30%; text-align: left; }
         table.producao th.col-meta { width: 15%; text-align: center; }
-        table.producao th.col-acao { width: 35%; text-align: center; }
-        table.producao th.col-separar { width: 20%; text-align: center; }
+        table.producao th.col-acao { width: 30%; text-align: center; }
+        table.producao th.col-separar { width: 25%; text-align: center; }
 
         table.producao th {
             padding: 15px;
@@ -84,7 +118,6 @@
             font-size: 18px;
             font-weight: bold;
             text-transform: uppercase;
-            transition: background-color 0.3s; 
         }
         table.producao th.header-depois {
             background-color: #007BFF; 
@@ -106,6 +139,7 @@
         table.producao td {
             padding: 15px;
             font-size: 18px;
+            vertical-align: middle;
         }
 
         table.producao td.col-acao { background-color: #FFFAEE; } 
@@ -119,34 +153,49 @@
 
         table.producao tr.concluido { background-color: #d4edda; }
         table.producao tr.concluido .nome-produto { text-decoration: line-through; color: #155724; }
+        table.producao tr.concluido td.col-acao { background-color: #d4edda; }
+        table.producao tr.concluido td.col-separar { background-color: #d4edda; }
 
         .qtd-meta { font-weight: bold; color: #007BFF; font-size: 20px; }
         .texto-zero { color: #aaa; font-style: italic; font-size: 16px; }
 
         /* =========================================
-           3. BOTÃO DE AÇÃO
+           3. BOTÕES DE AÇÃO (ASSAR E SEPARAR)
            ========================================= */
         .btn-acao {
-            padding: 12px 25px;
+            padding: 12px 20px;
             font-size: 18px;
             font-weight: bold;
             border: none;
             border-radius: 8px;
-            background-color: #007BFF; 
+            background-color: #FF8C00; 
             color: white;
             cursor: pointer;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            transition: background-color 0.2s, transform 0.1s;
+            transition: all 0.2s;
+            width: 80%;
         }
         .btn-acao:active { transform: scale(0.95); }
         .btn-acao.concluido { background-color: #28a745; }
         .btn-acao.desfazer { background-color: #6c757d; }
 
-        .footer { text-align: center; margin-top: 30px; padding: 20px 0; }
-        .btn-reset {
-            background-color: #dc3545; color: white; border: none;
-            padding: 10px 20px; border-radius: 5px; cursor: pointer; opacity: 0.8;
+        .btn-separar {
+            margin-top: 10px;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border: 2px solid #007BFF;
+            border-radius: 8px;
+            background-color: white;
+            color: #007BFF;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 90%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        .btn-separar:active { transform: scale(0.95); }
+        .btn-separar.concluido { background-color: #28a745; border-color: #28a745; color: white; }
+
     </style>
 </head>
 <body>
@@ -168,8 +217,8 @@
                 <tr>
                     <th class="col-produto">PRODUTO</th>
                     <th class="col-meta">Meta (Assar)</th>
-                    <th class="col-acao">AÇÃO (Assar Agora) 👈 Clique</th>
-                    <th class="col-separar">Separar para Freezer</th>
+                    <th class="col-acao">AÇÃO (Assar Agora)</th>
+                    <th class="col-separar">AÇÃO (Freezer)</th>
                 </tr>
             </thead>
             <tbody id="lista-producao">
@@ -177,17 +226,10 @@
         </table>
     </div>
 
-    <div class="footer">
-        <button class="btn-reset" onclick="resetarChecklist()">Resetar Checklist do Turno Atual</button>
-    </div>
-
     <script>
         let turnoAtual = ''; 
         let hoje = new Date();
 
-        /* DADOS DA PLANILHA (19 Produtos) 
-           Formato: [Dom(0), Seg(1), Ter(2), Qua(3), Qui(4), Sex(5), Sab(6)] 
-           Onde havia 'X' na planilha, está como 0 */
         const produtos = [
             { id: 1, nome: "Baguete Parmesão", metasManha: [15, 8, 15, 8, 15, 28, 28], metasTarde: [0, 15, 30, 15, 30, 30, 0] },
             { id: 2, nome: "Baguete Provolone", metasManha: [0, 8, 15, 8, 15, 28, 28], metasTarde: [0, 15, 30, 15, 30, 30, 0] },
@@ -210,14 +252,13 @@
             { id: 19, nome: "Assado Mortadela", metasManha: [0, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] }
         ];
 
-        /* MEMÓRIA DE CHECKLIST EXTENDIDA PARA 19 ITENS */
         const checklist = {
             'manha': {},
             'tarde': {}
         };
         for(let i=1; i<=19; i++) {
-            checklist['manha'][`id_${i}`] = false;
-            checklist['tarde'][`id_${i}`] = false;
+            checklist['manha'][`id_${i}`] = { assar: false, separar: false };
+            checklist['tarde'][`id_${i}`] = { assar: false, separar: false };
         }
 
         function exibirData() {
@@ -226,13 +267,17 @@
             display.textContent = hoje.toLocaleDateString('pt-BR', opcoes);
         }
 
-        /* O "CÉREBRO" DO HORÁRIO E DO TURNO */
+        function limparMemoriaTurno(turno) {
+            for(let i=1; i<=19; i++) {
+                checklist[turno][`id_${i}`] = { assar: false, separar: false };
+            }
+        }
+
         function verificarHorarioETurno() {
             const hora = hoje.getHours();
             const minuto = hoje.getMinutes();
             let turnoCalculado = 'manha'; 
 
-            // Regra da TARDE: Entre 14:30 e 22:59
             if ((hora === 14 && minuto >= 30) || (hora > 14 && hora < 23)) {
                 turnoCalculado = 'tarde';
             } else {
@@ -240,6 +285,9 @@
             }
 
             if (turnoAtual !== turnoCalculado) {
+                if (turnoAtual !== '') {
+                    limparMemoriaTurno(turnoCalculado);
+                }
                 turnoAtual = turnoCalculado;
                 atualizarSeloVisual();
                 renderizarTelas();
@@ -264,10 +312,9 @@
             const tituloOperacao = document.getElementById('titulo-operacao');
             const tituloPreparacao = document.getElementById('titulo-preparacao');
 
-            const diaAtual = hoje.getDay(); // 0: Dom, 1: Seg... 6: Sáb
+            const diaAtual = hoje.getDay(); 
             const diaSeguinte = (diaAtual + 1) % 7; 
 
-            /* LÓGICA DO PULO DE TURNO (LOOK-AHEAD) PARA FINAIS DE SEMANA */
             let diaPreparacao = diaAtual;
             let turnoPreparacao = 'tarde';
             let tituloTelhadoAzul = '❄️ PREPARAÇÃO (TARDE)';
@@ -276,13 +323,12 @@
                 tituloOperacao.textContent = '🔥 OPERAÇÃO DO TURNO (MANHÃ)';
                 tituloOperacao.style.backgroundColor = '#FF8C00'; 
                 
-                // Exceções do Final de Semana
-                if (diaAtual === 6) { // Se for Sábado de Manhã
-                    diaPreparacao = 0; // Pula para mostrar a Manhã de Domingo
+                if (diaAtual === 6) { 
+                    diaPreparacao = 0; 
                     turnoPreparacao = 'manha';
                     tituloTelhadoAzul = '❄️ PREPARAR P/ DOMINGO (MANHÃ)';
-                } else if (diaAtual === 0) { // Se for Domingo de Manhã
-                    diaPreparacao = 1; // Pula para mostrar a Manhã de Segunda
+                } else if (diaAtual === 0) { 
+                    diaPreparacao = 1; 
                     turnoPreparacao = 'manha';
                     tituloTelhadoAzul = '❄️ PREPARAR P/ SEGUNDA (MANHÃ)';
                 } else {
@@ -290,46 +336,47 @@
                     turnoPreparacao = 'tarde';
                     tituloTelhadoAzul = '❄️ PREPARAR P/ HOJE (TARDE)';
                 }
-
             } else {
                 tituloOperacao.textContent = '🔥 OPERAÇÃO DO TURNO (TARDE)';
                 tituloOperacao.style.backgroundColor = '#4B0082'; 
                 
-                // À tarde, sempre prepara a manhã do dia seguinte
                 diaPreparacao = diaSeguinte;
                 turnoPreparacao = 'manha';
                 tituloTelhadoAzul = '❄️ PREPARAR P/ AMANHÃ (MANHÃ)';
             }
 
-            // Atualiza o texto do telhado azul
             tituloPreparacao.textContent = tituloTelhadoAzul;
 
             produtos.forEach((produto) => {
                 let metaAssar = 0;
                 let metaSeparar = 0;
-                const statusFeito = checklist[turnoAtual][`id_${produto.id}`];
+                
+                const statusAssar = checklist[turnoAtual][`id_${produto.id}`].assar;
+                const statusSeparar = checklist[turnoAtual][`id_${produto.id}`].separar;
 
-                // Puxa o que tem que assar AGORA
                 if (turnoAtual === 'manha') {
                     metaAssar = produto.metasManha[diaAtual]; 
                 } else {
                     metaAssar = produto.metasTarde[diaAtual]; 
                 }
 
-                // Puxa o que tem que separar usando o guarda de trânsito (Pulo de turno)
                 if (turnoPreparacao === 'manha') {
                     metaSeparar = produto.metasManha[diaPreparacao];
                 } else {
                     metaSeparar = produto.metasTarde[diaPreparacao];
                 }
 
-                // Esconder produtos que são 0 tanto para assar quanto para separar (Limpa a tela!)
                 if (metaAssar === 0 && metaSeparar === 0) {
-                    return; // Pula este produto e vai para o próximo
+                    return; 
                 }
 
+                const assarCompleto = (metaAssar === 0 || statusAssar === true);
+                const separarCompleto = (metaSeparar === 0 || statusSeparar === true);
+                
                 const tr = document.createElement('tr');
-                if (statusFeito) tr.className = 'concluido'; 
+                if (assarCompleto && separarCompleto) {
+                    tr.className = 'concluido'; 
+                }
 
                 const tdProduto = `<td class="col-produto"><span class="nome-produto">${produto.nome}</span></td>`;
 
@@ -343,9 +390,9 @@
 
                 let tdAcao = '<td class="col-acao">';
                 if (metaAssar > 0) {
-                    const textoBotao = statusFeito ? 'Desfazer' : 'Assado';
-                    const classeBotao = statusFeito ? 'btn-acao desfazer' : 'btn-acao';
-                    tdAcao += `<button class="${classeBotao}" onclick="marcarFeito(${produto.id})">${textoBotao}</button>`;
+                    const textoBotao = statusAssar ? 'Desfazer' : 'Assado';
+                    const classeBotao = statusAssar ? 'btn-acao desfazer' : 'btn-acao';
+                    tdAcao += `<button class="${classeBotao}" onclick="marcarFeito(${produto.id}, 'assar')">${textoBotao}</button>`;
                 } else {
                     tdAcao += `<span class="texto-zero">-</span>`; 
                 }
@@ -353,7 +400,12 @@
 
                 let tdSeparar = '<td class="col-separar">';
                 if (metaSeparar > 0) {
-                    tdSeparar += `Separar: <strong>${metaSeparar} un.</strong>`;
+                    // SEUS TEXTOS ATUALIZADOS AQUI:
+                    const textoBotaoSep = statusSeparar ? '✔️ Separado' : 'Separar';
+                    const classeBotaoSep = statusSeparar ? 'btn-separar concluido' : 'btn-separar';
+                    
+                    tdSeparar += `<div>Meta: <strong>${metaSeparar} un.</strong></div>`;
+                    tdSeparar += `<button class="${classeBotaoSep}" onclick="marcarFeito(${produto.id}, 'separar')">${textoBotaoSep}</button>`;
                 } else {
                     tdSeparar += `<span class="texto-zero">-</span>`;
                 }
@@ -364,18 +416,9 @@
             });
         }
 
-        function marcarFeito(produtoId) {
-            checklist[turnoAtual][`id_${produtoId}`] = !checklist[turnoAtual][`id_${produtoId}`];
+        function marcarFeito(produtoId, tipoAcao) {
+            checklist[turnoAtual][`id_${produtoId}`][tipoAcao] = !checklist[turnoAtual][`id_${produtoId}`][tipoAcao];
             renderizarTelas(); 
-        }
-
-        function resetarChecklist() {
-            if (confirm("Deseja resetar o checklist da ação principal de hoje?")) {
-                for (let key in checklist[turnoAtual]) {
-                    checklist[turnoAtual][key] = false;
-                }
-                renderizarTelas();
-            }
         }
 
         exibirData(); 
