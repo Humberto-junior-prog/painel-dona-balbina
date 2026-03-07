@@ -8,34 +8,22 @@
         /* =========================================
            1. ESTILOS GERAIS (CSS)
            ========================================= */
-        * {
-            box-sizing: border-box; /* Garante que os tamanhos não quebrem a tela */
-        }
-
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f9;
             margin: 0;
-            padding: 15px;
+            padding: 20px;
             color: #333;
-            
-            /* MÁGICA 1: TELA CHEIA E TRAVADA */
-            height: 100vh; /* Ocupa 100% da altura da tela */
-            height: 100dvh; /* Suporte extra para navegadores de celular */
-            display: flex;
-            flex-direction: column;
-            overflow: hidden; /* Proíbe a página inteira de rolar */
+            box-sizing: border-box;
         }
         
         .header {
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 25px;
             background: white;
-            padding: 15px;
+            padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            
-            flex-shrink: 0; /* Protege o cabeçalho para ele não encolher */
         }
         .header h1 {
             margin: 0 0 10px 0;
@@ -53,7 +41,7 @@
         .indicador-turno {
             display: inline-block;
             color: white;
-            padding: 10px 25px;
+            padding: 12px 25px;
             font-size: 18px;
             font-weight: bold;
             border-radius: 25px;
@@ -70,35 +58,14 @@
             background: white;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            
-            /* MÁGICA 2: ROLAGEM INDEPENDENTE DA TABELA */
-            flex-grow: 1; /* Pega todo o espaço que sobrou da tela */
-            overflow-y: auto; /* Cria a barra de rolagem APENAS aqui dentro */
-            margin-bottom: 10px;
+            overflow: hidden; 
+            margin-bottom: 30px;
         }
 
         table.producao {
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed; 
-        }
-
-        /* MÁGICA 3: O EFEITO ÍMÃ (STICKY) */
-        table.producao thead {
-            position: sticky;
-            top: 0;
-            z-index: 10; /* Garante que os títulos fiquem por cima dos pães */
-        }
-
-/* Pintando o "vidro transparente" do canto superior esquerdo de branco */
-        table.producao thead tr:first-child th.col-produto {
-            background-color: white;
-        }
-        
-        /* Fundo sólido para a segunda linha de títulos não ficar transparente */
-        table.producao thead tr:nth-child(2) th {
-            background-color: #f0f0f5; 
-            border-bottom: 2px solid #ccc;
         }
 
         table.producao th.col-produto { width: 30%; text-align: left; }
@@ -118,6 +85,7 @@
             font-size: 18px;
             font-weight: bold;
             text-transform: uppercase;
+            transition: background-color 0.3s; 
         }
         table.producao th.header-depois {
             background-color: #007BFF; 
@@ -230,6 +198,7 @@
         let turnoAtual = ''; 
         let hoje = new Date();
 
+        /* DADOS DA PLANILHA (19 Produtos Atualizados) */
         const produtos = [
             { id: 1, nome: "Baguete Parmesão", metasManha: [15, 8, 15, 8, 15, 28, 28], metasTarde: [0, 15, 30, 15, 30, 30, 0] },
             { id: 2, nome: "Baguete Provolone", metasManha: [0, 8, 15, 8, 15, 28, 28], metasTarde: [0, 15, 30, 15, 30, 30, 0] },
@@ -252,6 +221,7 @@
             { id: 19, nome: "Assado Mortadela", metasManha: [0, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] }
         ];
 
+        /* NOVA MEMÓRIA: Guarda o status de Assar e de Separar separadamente */
         const checklist = {
             'manha': {},
             'tarde': {}
@@ -267,12 +237,14 @@
             display.textContent = hoje.toLocaleDateString('pt-BR', opcoes);
         }
 
+        /* FAXINEIRO INVISÍVEL: Limpa o turno específico */
         function limparMemoriaTurno(turno) {
             for(let i=1; i<=19; i++) {
                 checklist[turno][`id_${i}`] = { assar: false, separar: false };
             }
         }
 
+        /* O "CÉREBRO" DO HORÁRIO E DO TURNO */
         function verificarHorarioETurno() {
             const hora = hoje.getHours();
             const minuto = hoje.getMinutes();
@@ -284,7 +256,9 @@
                 turnoCalculado = 'manha';
             }
 
+            // Se o turno mudou (Virada de horário)
             if (turnoAtual !== turnoCalculado) {
+                // Se não for a primeira vez carregando a página, limpa a memória do novo turno
                 if (turnoAtual !== '') {
                     limparMemoriaTurno(turnoCalculado);
                 }
@@ -370,6 +344,7 @@
                     return; 
                 }
 
+                // Lógica da cor verde total: Só fica verde se tudo o que precisava ser feito, foi feito
                 const assarCompleto = (metaAssar === 0 || statusAssar === true);
                 const separarCompleto = (metaSeparar === 0 || statusSeparar === true);
                 
@@ -380,6 +355,7 @@
 
                 const tdProduto = `<td class="col-produto"><span class="nome-produto">${produto.nome}</span></td>`;
 
+                // Coluna 1: Meta de Assar
                 let tdMeta = '<td class="col-meta">';
                 if (metaAssar > 0) {
                     tdMeta += `<span class="qtd-meta">${metaAssar} un.</span> ➡️`;
@@ -388,6 +364,7 @@
                 }
                 tdMeta += '</td>';
 
+                // Coluna 2: Botão de Assar
                 let tdAcao = '<td class="col-acao">';
                 if (metaAssar > 0) {
                     const textoBotao = statusAssar ? 'Desfazer' : 'Assado';
@@ -398,9 +375,9 @@
                 }
                 tdAcao += '</td>';
 
+                // Coluna 3: Botão de Separar (Freezer)
                 let tdSeparar = '<td class="col-separar">';
                 if (metaSeparar > 0) {
-                    // SEUS TEXTOS ATUALIZADOS AQUI:
                     const textoBotaoSep = statusSeparar ? '✔️ Separado' : 'Separar';
                     const classeBotaoSep = statusSeparar ? 'btn-separar concluido' : 'btn-separar';
                     
@@ -416,6 +393,7 @@
             });
         }
 
+        /* Atualiza a memória baseada no tipo de botão que foi clicado */
         function marcarFeito(produtoId, tipoAcao) {
             checklist[turnoAtual][`id_${produtoId}`][tipoAcao] = !checklist[turnoAtual][`id_${produtoId}`][tipoAcao];
             renderizarTelas(); 
