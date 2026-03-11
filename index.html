@@ -58,12 +58,16 @@
             background: white;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            overflow: hidden; 
+            
+            /* MUDANÇA AQUI: Permite rolagem horizontal se a tela for muito pequena */
+            overflow-x: auto; 
             margin-bottom: 30px;
         }
 
         table.producao {
             width: 100%;
+            /* MUDANÇA AQUI: Garante que a tabela tenha espaço mínimo para não esmagar os botões */
+            min-width: 650px; 
             border-collapse: collapse;
             table-layout: fixed; 
         }
@@ -164,6 +168,20 @@
         .btn-separar:active { transform: scale(0.95); }
         .btn-separar.concluido { background-color: #28a745; border-color: #28a745; color: white; }
 
+        /* =========================================
+           4. RESPONSIVIDADE (CELULARES)
+           ========================================= */
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .header h1 { font-size: 22px; }
+            .data-atual { font-size: 16px; }
+            .indicador-turno { font-size: 16px; padding: 10px 20px; }
+            
+            table.producao td { padding: 12px 8px; }
+            .btn-acao, .btn-separar { width: 95%; font-size: 16px; padding: 10px; }
+            .nome-produto { font-size: 18px; }
+        }
+
     </style>
 </head>
 <body>
@@ -198,7 +216,6 @@
         let turnoAtual = ''; 
         let hoje = new Date();
 
-        /* DADOS DA PLANILHA (19 Produtos Atualizados) */
         const produtos = [
             { id: 1, nome: "Baguete Parmesão", metasManha: [15, 8, 15, 8, 15, 28, 28], metasTarde: [0, 15, 30, 15, 30, 30, 0] },
             { id: 2, nome: "Baguete Provolone", metasManha: [0, 8, 15, 8, 15, 28, 28], metasTarde: [0, 15, 30, 15, 30, 30, 0] },
@@ -210,7 +227,7 @@
             { id: 8, nome: "Pão Francês Integral", metasManha: [15, 15, 15, 15, 15, 15, 15], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
             { id: 9, nome: "Pão Mini Hot Dog", metasManha: [0, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
             { id: 10, nome: "Pão Suíço", metasManha: [0, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
-            { id: 11, nome: "Pão Suíço C/ Açúcar", metasManha: [0, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
+            { id: 11, nome: "Pão Suíço s/ Açúcar", metasManha: [0, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
             { id: 12, nome: "Pão Doce Simples", metasManha: [15, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
             { id: 13, nome: "Pão Doce Coco", metasManha: [0, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
             { id: 14, nome: "Pão Doce c/ Doce de Leite", metasManha: [0, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
@@ -221,7 +238,6 @@
             { id: 19, nome: "Assado Mortadela", metasManha: [0, 15, 15, 15, 15, 15, 30], metasTarde: [0, 15, 15, 15, 15, 15, 0] }
         ];
 
-        /* NOVA MEMÓRIA: Guarda o status de Assar e de Separar separadamente */
         const checklist = {
             'manha': {},
             'tarde': {}
@@ -237,14 +253,12 @@
             display.textContent = hoje.toLocaleDateString('pt-BR', opcoes);
         }
 
-        /* FAXINEIRO INVISÍVEL: Limpa o turno específico */
         function limparMemoriaTurno(turno) {
             for(let i=1; i<=19; i++) {
                 checklist[turno][`id_${i}`] = { assar: false, separar: false };
             }
         }
 
-        /* O "CÉREBRO" DO HORÁRIO E DO TURNO */
         function verificarHorarioETurno() {
             const hora = hoje.getHours();
             const minuto = hoje.getMinutes();
@@ -256,9 +270,7 @@
                 turnoCalculado = 'manha';
             }
 
-            // Se o turno mudou (Virada de horário)
             if (turnoAtual !== turnoCalculado) {
-                // Se não for a primeira vez carregando a página, limpa a memória do novo turno
                 if (turnoAtual !== '') {
                     limparMemoriaTurno(turnoCalculado);
                 }
@@ -344,7 +356,6 @@
                     return; 
                 }
 
-                // Lógica da cor verde total: Só fica verde se tudo o que precisava ser feito, foi feito
                 const assarCompleto = (metaAssar === 0 || statusAssar === true);
                 const separarCompleto = (metaSeparar === 0 || statusSeparar === true);
                 
@@ -355,7 +366,6 @@
 
                 const tdProduto = `<td class="col-produto"><span class="nome-produto">${produto.nome}</span></td>`;
 
-                // Coluna 1: Meta de Assar
                 let tdMeta = '<td class="col-meta">';
                 if (metaAssar > 0) {
                     tdMeta += `<span class="qtd-meta">${metaAssar} un.</span> ➡️`;
@@ -364,7 +374,6 @@
                 }
                 tdMeta += '</td>';
 
-                // Coluna 2: Botão de Assar
                 let tdAcao = '<td class="col-acao">';
                 if (metaAssar > 0) {
                     const textoBotao = statusAssar ? 'Desfazer' : 'Assado';
@@ -375,7 +384,6 @@
                 }
                 tdAcao += '</td>';
 
-                // Coluna 3: Botão de Separar (Freezer)
                 let tdSeparar = '<td class="col-separar">';
                 if (metaSeparar > 0) {
                     const textoBotaoSep = statusSeparar ? '✔️ Separado' : 'Separar';
@@ -393,7 +401,6 @@
             });
         }
 
-        /* Atualiza a memória baseada no tipo de botão que foi clicado */
         function marcarFeito(produtoId, tipoAcao) {
             checklist[turnoAtual][`id_${produtoId}`][tipoAcao] = !checklist[turnoAtual][`id_${produtoId}`][tipoAcao];
             renderizarTelas(); 
