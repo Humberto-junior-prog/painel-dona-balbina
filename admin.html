@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Gerente - Dona Balbina</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 20px; color: #333; }
+        h1 { text-align: center; color: #1a1a1a; }
+        .aviso { text-align: center; color: #666; margin-bottom: 20px; }
+        
+        /* Estilo dos botões */
+        button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-adicionar { background-color: #0d6efd; color: white; margin-bottom: 20px; width: 100%; font-size: 16px; }
+        .btn-adicionar:hover { background-color: #0b5ed7; }
+        .btn-remover { background-color: #dc3545; color: white; float: right; padding: 8px 12px; }
+        .btn-salvar { background-color: #198754; color: white; width: 100%; font-size: 18px; margin-top: 20px; padding: 15px; }
+        .btn-salvar:hover { background-color: #157347; }
+        
+        /* Estilo dos cartões de produtos */
+        .produto-card { background: white; padding: 20px; margin-bottom: 15px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .campo-grupo { margin-bottom: 15px; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; color: #555; }
+        input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 15px; }
+        input:focus { border-color: #0d6efd; outline: none; }
+        small { color: #888; display: block; margin-top: 2px; }
+    </style>
+</head>
+<body>
+
+    <h1>⚙️ Painel do Gerente</h1>
+    <p class="aviso">Altere as metas, adicione produtos ou remova itens de linha.</p>
+
+    <button class="btn-adicionar" onclick="adicionarProduto()">➕ Adicionar Novo Produto</button>
+
+    <div id="lista-produtos">
+        <p style="text-align: center;">Carregando produtos do servidor...</p>
+    </div>
+
+    <button class="btn-salvar" onclick="salvarTudo()">💾 SALVAR TODAS AS ALTERAÇÕES</button>
+
+    <script>
+        // O endereço do seu Cérebro na nuvem!
+        const API_URL = 'https://api-dona-balbina.onrender.com/produtos';
+        let produtos = [];
+
+        // 1. Busca os dados atuais no servidor
+        async function carregarProdutos() {
+            try {
+                const resposta = await fetch(API_URL);
+                produtos = await resposta.json();
+                desenharTela();
+            } catch (erro) {
+                document.getElementById('lista-produtos').innerHTML = '<p style="color:red; text-align:center;">Erro ao conectar. O servidor pode estar dormindo (aguarde 1 min e atualize a página).</p>';
+            }
+        }
+
+        // 2. Desenha a tela transformando os dados em HTML
+        function desenharTela() {
+            const divLista = document.getElementById('lista-produtos');
+            divLista.innerHTML = ''; // Limpa a tela
+
+            produtos.forEach((produto, index) => {
+                const div = document.createElement('div');
+                div.className = 'produto-card';
+                
+                // Usamos o .join(', ') para transformar o Array do computador em um texto legível para você
+                div.innerHTML = `
+                    <button class="btn-remover" onclick="removerProduto(${index})">🗑️ Excluir</button>
+                    
+                    <div class="campo-grupo">
+                        <label>Nome do Produto:</label>
+                        <input type="text" value="${produto.nome}" onchange="atualizarNome(${index}, this.value)">
+                    </div>
+
+                    <div class="campo-grupo">
+                        <label>☀️ Metas Manhã:</label>
+                        <input type="text" value="${produto.metasManha.join(', ')}" onchange="atualizarMetas(${index}, 'manha', this.value)">
+                        <small>Digite 7 números separados por vírgula (Dom a Sáb). Ex: 15, 8, 15, 8, 15, 28, 28</small>
+                    </div>
+
+                    <div class="campo-grupo">
+                        <label>🌙 Metas Tarde:</label>
+                        <input type="text" value="${produto.metasTarde.join(', ')}" onchange="atualizarMetas(${index}, 'tarde', this.value)">
+                        <small>Digite 7 números separados por vírgula (Dom a Sáb).</small>
+                    </div>
+                `;
+                divLista.appendChild(div);
+            });
+        }
+
+        // Funções para guardar as alterações que você digita
+        function atualizarNome(index, novoNome) {
+            produtos[index].nome = novoNome;
+        }
+
+        function atualizarMetas(index, turno, valorDigitado) {
+            // Pega o texto "15, 8, 0", separa nas vírgulas e transforma de volta em Array de números
+            const arrayNumeros = valorDigitado.split(',').map(num => Number(num.trim()));
+            
+            if(turno === 'manha') produtos[index].metasManha = arrayNumeros;
+            if(turno === 'tarde') produtos[index].metasTarde = arrayNumeros;
+        }
+
+        // Função para criar a linha em branco do novo produto
+        function adicionarProduto() {
+            // Acha o maior ID que existe para criar o próximo (RG único)
+            let maiorId = 0;
+            produtos.forEach(p => { if(p.id > maiorId) maiorId = p.id; });
+
+            const novoProduto = {
+                id: maiorId + 1,
+                nome: "Novo Pão",
+                metasManha: Array(0,0,0,0,0,0,0),
+                metasTarde: Array(0,0,0,0,0,0,0)
+            };
+            
+            // Coloca o novo produto no topo da lista
+            produtos.unshift(novoProduto);
+            desenharTela();
+            window.scrollTo(0, 0); // Rola a tela para cima para ver o produto novo
+        }
+
+        // Função para apagar o produto
+        function removerProduto(index) {
+            const nomeDoPao = produtos[index].nome;
+            if(confirm(`Tem certeza que deseja apagar permanentemente o item: ${nomeDoPao}?`)) {
+                produtos.splice(index, 1);
+                desenharTela();
+            }
+        }
+
+        // 3. Envia o pacote completo atualizado para o Servidor (A Rota Mágica!)
+        async function salvarTudo() {
+            const botao = document.querySelector('.btn-salvar');
+            botao.innerHTML = '⏳ Salvando...';
+            
+            try {
+                const resposta = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(produtos) // Empacota a lista
+                });
+                
+                if(resposta.ok) {
+                    alert("✅ Tudo salvo com sucesso! O painel da produção já foi atualizado.");
+                }
+            } catch (erro) {
+                alert("Erro ao salvar. Verifique sua internet.");
+            } finally {
+                botao.innerHTML = '💾 SALVAR TODAS AS ALTERAÇÕES';
+            }
+        }
+
+        // Inicia a tela automaticamente quando o arquivo é aberto
+        carregarProdutos();
+    </script>
+</body>
+</html>
