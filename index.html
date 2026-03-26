@@ -95,72 +95,56 @@
     </div>
 
     <script>
-        // O ENDEREÇO DO SEU NOVO CÉREBRO (NODE.JS)
-        const API_URL = 'https://api-dona-balbina.onrender.com/producao';
+        // ==========================================
+        // 1. ENDEREÇOS DO CÉREBRO
+        // ==========================================
+        const API_CHECKLIST = 'https://api-dona-balbina.onrender.com/producao';
+        const API_PRODUTOS = 'https://api-dona-balbina.onrender.com/produtos';
+
         let turnoAtual = ''; 
         let hoje = new Date();
-
-        const produtos = [
-            { id: 1, nome: "Baguete Parmesão", metasManha: [15, 15, 15, 15, 15, 30, 30], metasTarde: [0, 20, 20, 20, 30, 30, 0] },
-            { id: 2, nome: "Baguete Provolone", metasManha: [0, 8, 8, 8, 15, 15, 30], metasTarde: [0, 20, 20, 20, 30, 30, 0] },
-            { id: 3, nome: "Baguete Gergelim", metasManha: [0, 5, 5, 5, 5, 5, 5], metasTarde: [0, 0, 0, 0, 0, 0, 0] },
-            { id: 4, nome: "Cervejinha", metasManha: [0, 8, 8, 8, 8, 8, 8], metasTarde: [0, 0, 0, 0, 0, 0, 0] },
-            { id: 5, nome: "Pão de Batata", metasManha: [16, 16, 16, 16, 16, 24, 16], metasTarde: [0, 0, 0, 0, 0, 0, 0] },
-            { id: 6, nome: "Brioche", metasManha: [0, 16, 16, 16, 16, 16, 16], metasTarde: [0, 0, 0, 0, 0, 0, 0] },
-            { id: 7, nome: "Broa de Milho", metasManha: [0, 8, 8, 8, 8, 8, 8], metasTarde: [0, 0, 0, 0, 0, 0, 0] },
-            { id: 8, nome: "Pão Francês Integral", metasManha: [15, 15, 15, 15, 15, 15, 15], metasTarde: [0, 15, 15, 15, 15, 15, 0] },
-            { id: 9, nome: "Pão Mini Hot Dog", metasManha: [0, 15, 15, 15, 15, 30, 15], metasTarde: [0, 0, 0, 0, 0, 0, 0] },
-            { id: 10, nome: "Pão Suíço", metasManha: [0, 15, 15, 15, 15, 15, 15], metasTarde: [0, 0, 0, 0, 0, 0, 0] },
-            { id: 11, nome: "Pão Suíço s/ Açúcar", metasManha: [0, 15, 15, 15, 30, 30, 30], metasTarde: [0, 0, 0, 0, 0, 0, 0] },
-            { id: 12, nome: "Pão Doce Simples", metasManha: [20, 20, 20, 20, 20, 20, 20], metasTarde: [0, 0, 0, 0, 0, 0, 0] },
-            { id: 13, nome: "Pão Doce Coco", metasManha: [0, 30, 30, 30, 30, 30, 30], metasTarde: [0, 0, 0, 0, 0, 0, 0] },
-            { id: 14, nome: "Pão Doce c/ Doce de Leite", metasManha: [0, 20, 20, 20, 20, 20, 20], metasTarde: [0, 0, 0, 0, 0, 0, 0] },
-            { id: 15, nome: "Pão Doce c/ Goiabada", metasManha: [0, 20, 20, 20, 20, 20, 20], metasTarde: [0, 0, 0, 0, 0, 0, 0] },
-            { id: 16, nome: "Assado Salsicha", metasManha: [0, 30, 30, 30, 30, 30, 30], metasTarde: [0, 0, 0, 0, 0, 0, 0] },
-            { id: 17, nome: "Assado Frango", metasManha: [0, 30, 30, 30, 30, 30, 30], metasTarde: [0, 0, 0, 0, 0, 0, 0] },
-            { id: 18, nome: "Assado Presunto", metasManha: [0, 30, 30, 30, 30, 30, 30], metasTarde: [0, 0, 0, 0, 0, 0, 0] },
-            { id: 19, nome: "Assado Hamburguer", metasManha: [0, 20, 20, 20, 20, 20, 20], metasTarde: [0, 0, 0, 0, 0, 0, 0] }
-        ];
-
+        
+        // As listas nascem vazias e são preenchidas pela internet!
+        let produtos = []; 
         let checklist = { 'manha': {}, 'tarde': {} };
-        for(let i=1; i<=19; i++) {
-            checklist['manha'][`id_${i}`] = { assar: false, separar: false };
-            checklist['tarde'][`id_${i}`] = { assar: false, separar: false };
-        }
 
         // ==========================================
-        // NOVAS FUNÇÕES: COMUNICAÇÃO COM O BACK-END
+        // 2. COMUNICAÇÃO COM O BACK-END
         // ==========================================
-
-        // 1. Puxar os dados salvos no servidor
         async function carregarDadosDoServidor() {
             try {
-                const resposta = await fetch(API_URL);
-                if (resposta.ok) {
-                    const dadosServidor = await resposta.json();
-                    checklist = dadosServidor;
-                    renderizarTelas(); // Atualiza a tela com os dados reais
+                // O código agora pede as Metas e o Checklist ao mesmo tempo!
+                const [respChecklist, respProdutos] = await Promise.all([
+                    fetch(API_CHECKLIST),
+                    fetch(API_PRODUTOS)
+                ]);
+
+                if (respChecklist.ok && respProdutos.ok) {
+                    checklist = await respChecklist.json();
+                    produtos = await respProdutos.json();
+                    renderizarTelas(); 
                 }
             } catch (erro) {
-                console.log("Servidor desligado ou erro na conexão.");
+                console.log("Servidor dormindo ou carregando.");
             }
         }
 
-        // 2. Enviar a atualização para o servidor
         async function salvarDadosNoServidor() {
             try {
-                await fetch(API_URL, {
+                // Quando o padeiro clica, ele salva SÓ o checklist
+                await fetch(API_CHECKLIST, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(checklist)
                 });
             } catch (erro) {
-                console.log("Erro ao salvar no servidor.");
+                console.log("Erro ao salvar clique no servidor.");
             }
         }
 
         // ==========================================
-
+        // 3. LÓGICA DE TURNOS
+        // ==========================================
         function exibirData() {
             const display = document.getElementById('data-display');
             const opcoes = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -168,10 +152,11 @@
         }
 
         function limparMemoriaTurno(turno) {
-            for(let i=1; i<=19; i++) {
-                checklist[turno][`id_${i}`] = { assar: false, separar: false };
-            }
-            salvarDadosNoServidor(); // Salva a limpeza no banco de dados!
+            // Agora ele limpa os turnos lendo a lista dinâmica de produtos, não importa se são 19 ou 50 itens!
+            produtos.forEach(produto => {
+                checklist[turno][`id_${produto.id}`] = { assar: false, separar: false };
+            });
+            salvarDadosNoServidor(); 
         }
 
         function verificarHorarioETurno() {
@@ -186,7 +171,7 @@
             }
 
             if (turnoAtual !== turnoCalculado) {
-                if (turnoAtual !== '') {
+                if (turnoAtual !== '' && produtos.length > 0) {
                     limparMemoriaTurno(turnoCalculado);
                 }
                 turnoAtual = turnoCalculado;
@@ -206,7 +191,13 @@
             }
         }
 
+        // ==========================================
+        // 4. DESENHO DA TELA
+        // ==========================================
         function renderizarTelas() {
+            // Previne erro se a internet ainda estiver baixando os dados
+            if (produtos.length === 0) return;
+
             const container = document.getElementById('lista-producao');
             container.innerHTML = ''; 
 
@@ -252,8 +243,10 @@
                 let metaAssar = 0;
                 let metaSeparar = 0;
                 
-                const statusAssar = checklist[turnoAtual][`id_${produto.id}`].assar;
-                const statusSeparar = checklist[turnoAtual][`id_${produto.id}`].separar;
+                // Trava de segurança: Se o produto acabou de ser criado, considera falso para não quebrar a tela
+                const itemChecklist = checklist[turnoAtual][`id_${produto.id}`] || { assar: false, separar: false };
+                const statusAssar = itemChecklist.assar;
+                const statusSeparar = itemChecklist.separar;
 
                 if (turnoAtual === 'manha') {
                     metaAssar = produto.metasManha[diaAtual]; 
@@ -317,28 +310,26 @@
         }
 
         // ==========================================
-        // MUDANÇA AQUI: Agora salva no servidor ao clicar!
+        // 5. CLIQUE NO BOTÃO DA PADARIA
         // ==========================================
         function marcarFeito(produtoId, tipoAcao) {
-            // Atualiza a tela primeiro para ser rápido
             checklist[turnoAtual][`id_${produtoId}`][tipoAcao] = !checklist[turnoAtual][`id_${produtoId}`][tipoAcao];
             renderizarTelas(); 
-            
-            // Depois avisa o servidor (silenciosamente)
             salvarDadosNoServidor(); 
         }
 
-        // Inicialização
+        // ==========================================
+        // 6. O MOTOR QUE RODA TUDO
+        // ==========================================
         exibirData(); 
         verificarHorarioETurno(); 
-        carregarDadosDoServidor(); // Puxa os dados logo que abre a página
+        carregarDadosDoServidor(); // Dá a partida no motor
 
-        // Atualizador Automático: A cada 5 segundos, puxa os dados e verifica o horário
         setInterval(() => {
             hoje = new Date(); 
             exibirData(); 
             verificarHorarioETurno(); 
-            carregarDadosDoServidor(); // Mantém a tela sincronizada!
+            carregarDadosDoServidor(); // Atualiza a tela sozinho a cada 5 segundos
         }, 5000);
 
     </script>
