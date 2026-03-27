@@ -13,13 +13,20 @@
         button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-adicionar { background-color: #0d6efd; color: white; margin-bottom: 20px; width: 100%; font-size: 16px; }
         .btn-adicionar:hover { background-color: #0b5ed7; }
-        .btn-remover { background-color: #dc3545; color: white; float: right; padding: 8px 12px; }
+        
+        /* Novos botões de ação na mesma linha */
+        .acoes-produto { float: right; display: flex; gap: 5px; }
+        .btn-mover { background-color: #6c757d; color: white; padding: 8px 12px; font-size: 16px; }
+        .btn-mover:hover { background-color: #5c636a; }
+        .btn-mover:disabled { background-color: #cccccc; cursor: not-allowed; opacity: 0.5; }
+        .btn-remover { background-color: #dc3545; color: white; padding: 8px 12px; }
+        
         .btn-salvar { background-color: #198754; color: white; width: 100%; font-size: 18px; margin-top: 20px; padding: 15px; }
         .btn-salvar:hover { background-color: #157347; }
         
         /* Estilo dos cartões de produtos */
         .produto-card { background: white; padding: 20px; margin-bottom: 15px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .campo-grupo { margin-bottom: 15px; }
+        .campo-grupo { margin-bottom: 15px; clear: both; padding-top: 10px; }
         label { font-weight: bold; display: block; margin-bottom: 5px; color: #555; }
         input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 15px; }
         input:focus { border-color: #0d6efd; outline: none; }
@@ -29,7 +36,7 @@
 <body>
 
     <h1>⚙️ Painel do Gerente</h1>
-    <p class="aviso">Altere as metas, adicione produtos ou remova itens de linha.</p>
+    <p class="aviso">Altere as metas, adicione produtos ou reorganize a lista.</p>
 
     <button class="btn-adicionar" onclick="adicionarProduto()">➕ Adicionar Novo Produto</button>
 
@@ -40,11 +47,9 @@
     <button class="btn-salvar" onclick="salvarTudo()">💾 SALVAR TODAS AS ALTERAÇÕES</button>
 
     <script>
-        // O endereço do seu Cérebro na nuvem!
         const API_URL = 'https://api-dona-balbina.onrender.com/produtos';
         let produtos = [];
 
-        // 1. Busca os dados atuais no servidor
         async function carregarProdutos() {
             try {
                 const resposta = await fetch(API_URL);
@@ -55,18 +60,21 @@
             }
         }
 
-        // 2. Desenha a tela transformando os dados em HTML
         function desenharTela() {
             const divLista = document.getElementById('lista-produtos');
-            divLista.innerHTML = ''; // Limpa a tela
+            divLista.innerHTML = ''; 
 
             produtos.forEach((produto, index) => {
                 const div = document.createElement('div');
                 div.className = 'produto-card';
                 
-                // Usamos o .join(', ') para transformar o Array do computador em um texto legível para você
+                // MUDANÇA AQUI: Adicionado o bloco "acoes-produto" com as setas
                 div.innerHTML = `
-                    <button class="btn-remover" onclick="removerProduto(${index})">🗑️ Excluir</button>
+                    <div class="acoes-produto">
+                        <button class="btn-mover" onclick="moverParaCima(${index})" title="Subir" ${index === 0 ? 'disabled' : ''}>⬆️</button>
+                        <button class="btn-mover" onclick="moverParaBaixo(${index})" title="Descer" ${index === produtos.length - 1 ? 'disabled' : ''}>⬇️</button>
+                        <button class="btn-remover" onclick="removerProduto(${index})">🗑️ Excluir</button>
+                    </div>
                     
                     <div class="campo-grupo">
                         <label>Nome do Produto:</label>
@@ -89,22 +97,39 @@
             });
         }
 
-        // Funções para guardar as alterações que você digita
         function atualizarNome(index, novoNome) {
             produtos[index].nome = novoNome;
         }
 
         function atualizarMetas(index, turno, valorDigitado) {
-            // Pega o texto "15, 8, 0", separa nas vírgulas e transforma de volta em Array de números
             const arrayNumeros = valorDigitado.split(',').map(num => Number(num.trim()));
-            
             if(turno === 'manha') produtos[index].metasManha = arrayNumeros;
             if(turno === 'tarde') produtos[index].metasTarde = arrayNumeros;
         }
 
-        // Função para criar a linha em branco do novo produto
+        // ==========================================
+        // NOVAS FUNÇÕES DE MOVIMENTAÇÃO (O "Sobe e Desce")
+        // ==========================================
+        function moverParaCima(index) {
+            if (index > 0) {
+                const itemMovido = produtos[index];
+                produtos[index] = produtos[index - 1]; // O de cima desce
+                produtos[index - 1] = itemMovido;      // O de baixo sobe
+                desenharTela();
+            }
+        }
+
+        function moverParaBaixo(index) {
+            if (index < produtos.length - 1) {
+                const itemMovido = produtos[index];
+                produtos[index] = produtos[index + 1]; // O de baixo sobe
+                produtos[index + 1] = itemMovido;      // O de cima desce
+                desenharTela();
+            }
+        }
+        // ==========================================
+
         function adicionarProduto() {
-            // Acha o maior ID que existe para criar o próximo (RG único)
             let maiorId = 0;
             produtos.forEach(p => { if(p.id > maiorId) maiorId = p.id; });
 
@@ -115,13 +140,11 @@
                 metasTarde: Array(0,0,0,0,0,0,0)
             };
             
-            // Coloca o novo produto no topo da lista
             produtos.unshift(novoProduto);
             desenharTela();
-            window.scrollTo(0, 0); // Rola a tela para cima para ver o produto novo
+            window.scrollTo(0, 0); 
         }
 
-        // Função para apagar o produto
         function removerProduto(index) {
             const nomeDoPao = produtos[index].nome;
             if(confirm(`Tem certeza que deseja apagar permanentemente o item: ${nomeDoPao}?`)) {
@@ -130,7 +153,6 @@
             }
         }
 
-        // 3. Envia o pacote completo atualizado para o Servidor (A Rota Mágica!)
         async function salvarTudo() {
             const botao = document.querySelector('.btn-salvar');
             botao.innerHTML = '⏳ Salvando...';
@@ -139,11 +161,11 @@
                 const resposta = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(produtos) // Empacota a lista
+                    body: JSON.stringify(produtos) 
                 });
                 
                 if(resposta.ok) {
-                    alert("✅ Tudo salvo com sucesso! O painel da produção já foi atualizado.");
+                    alert("✅ Tudo salvo com sucesso! O painel da produção já foi atualizado com a nova ordem.");
                 }
             } catch (erro) {
                 alert("Erro ao salvar. Verifique sua internet.");
@@ -152,7 +174,6 @@
             }
         }
 
-        // Inicia a tela automaticamente quando o arquivo é aberto
         carregarProdutos();
     </script>
 </body>
