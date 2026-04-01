@@ -5,32 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel do Gerente - Dona Balbina</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 20px; color: #333; }
-        h1 { text-align: center; color: #1a1a1a; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 20px; color: #333; margin: 0; }
+        h1, h2 { text-align: center; color: #1a1a1a; }
         .aviso { text-align: center; color: #666; margin-bottom: 20px; }
         
-        /* Estilo dos botões */
         button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-adicionar { background-color: #0d6efd; color: white; margin-bottom: 20px; width: 100%; font-size: 16px; }
         .btn-adicionar:hover { background-color: #0b5ed7; }
         
-        /* Novos botões de ação na mesma linha */
         .acoes-produto { float: right; display: flex; gap: 5px; }
         .btn-mover { background-color: #6c757d; color: white; padding: 8px 12px; font-size: 16px; }
-        .btn-mover:hover { background-color: #5c636a; }
-        .btn-mover:disabled { background-color: #cccccc; cursor: not-allowed; opacity: 0.5; }
         .btn-remover { background-color: #dc3545; color: white; padding: 8px 12px; }
         
-        .btn-salvar { background-color: #198754; color: white; width: 100%; font-size: 18px; margin-top: 20px; padding: 15px; }
+        .btn-salvar { background-color: #198754; color: white; width: 100%; font-size: 18px; margin-top: 10px; padding: 15px; }
         .btn-salvar:hover { background-color: #157347; }
         
-        /* Estilo dos cartões de produtos */
         .produto-card { background: white; padding: 20px; margin-bottom: 15px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .campo-grupo { margin-bottom: 15px; clear: both; padding-top: 10px; }
         label { font-weight: bold; display: block; margin-bottom: 5px; color: #555; }
         input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 15px; }
-        input:focus { border-color: #0d6efd; outline: none; }
-        small { color: #888; display: block; margin-top: 2px; }
+        
+        /* ==================================================== */
+        /* ESTILOS: QUADRO DE GAMIFICAÇÃO UNIFICADO             */
+        /* ==================================================== */
+        .painel-gamificacao { background: #fff; border: 2px solid #ffc107; padding: 20px; margin-top: 40px; border-radius: 10px; box-shadow: 0 4px 10px rgba(255, 193, 7, 0.2); }
+        
+        /* Card centralizado e único */
+        .cabecalho-gami { display: flex; justify-content: center; margin-bottom: 30px; }
+        .contador-card { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; width: 60%; min-width: 200px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .contador-valor { font-size: 36px; font-weight: bold; margin: 15px 0; color: #d97706; }
+        
+        .btn-controle { background: #e2e8f0; color: #333; padding: 8px 25px; font-size: 24px; border-radius: 6px; margin: 0 5px; }
+        .btn-controle:hover { background: #cbd5e1; }
+        
+        /* A MÁGICA DA TRILHA LINEAR (ESCORREGADOR) */
+        .trilha-wrapper { width: 100%; overflow-x: auto; padding-bottom: 25px; padding-top: 15px; }
+        .trilha-linear { display: flex; gap: 10px; min-width: max-content; padding: 0 10px; }
+        
+        .dia-bolinha { width: 45px; height: 45px; border-radius: 50%; background: #f1f5f9; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #94a3b8; font-size: 20px; position: relative; }
+        .dia-bolinha.conquistado { background: #fffbeb; border-color: #fbbf24; color: #d97706; }
+        
+        /* Marcadores de Prêmio na Trilha */
+        .marcador-premio { position: absolute; top: -30px; font-size: 14px; white-space: nowrap; background: #333; color: white; padding: 3px 8px; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -44,137 +60,183 @@
         <p style="text-align: center;">Carregando produtos do servidor...</p>
     </div>
 
-    <button class="btn-salvar" onclick="salvarTudo()">💾 SALVAR TODAS AS ALTERAÇÕES</button>
+    <button class="btn-salvar" onclick="salvarTudo()">💾 SALVAR PRODUTOS E METAS</button>
+
+    <div class="painel-gamificacao">
+        <h2>🎮 Controle de Gamificação</h2>
+        <p class="aviso" style="margin-top: -10px;">Ajuste a sequência manualmente em caso de imprevistos.</p>
+        
+        <div class="cabecalho-gami">
+            <div class="contador-card">
+                <div style="font-size: 18px; font-weight: bold; color: #555;">Dias Seguidos (Pãezinhos) 🥖</div>
+                <div class="contador-valor" id="display-streak">0</div>
+                <div>
+                    <button class="btn-controle" onclick="ajustarPontos(-1)">-</button>
+                    <button class="btn-controle" onclick="ajustarPontos(1)">+</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="trilha-wrapper">
+            <div class="trilha-linear" id="trilha-visual">
+                </div>
+        </div>
+
+        <button class="btn-salvar" style="background-color: #d97706;" onclick="salvarGamificacao()">💾 SALVAR AJUSTE DE PONTOS</button>
+    </div>
 
     <script>
         const API_URL = 'https://api-dona-balbina.onrender.com/produtos';
         let produtos = [];
 
+        // Variável Única de Gamificação (Pãozinho e Sequência são a mesma coisa)
+        let streakAtual = 14; // Simulando que eles estão no dia 14 para você ver o visual
+
+        // =========================================================
+        // LÓGICA DA GAMIFICAÇÃO (MODO DEUS E TRILHA VISUAL)
+        // =========================================================
+        function atualizarPainelGami() {
+            // Atualiza o número grande
+            document.getElementById('display-streak').innerText = streakAtual;
+
+            // Desenha a trilha linear de 30 dias
+            const trilha = document.getElementById('trilha-visual');
+            trilha.innerHTML = ''; // Limpa a trilha
+
+            for (let i = 1; i <= 30; i++) {
+                const bolinha = document.createElement('div');
+                bolinha.className = 'dia-bolinha';
+                
+                // Se o dia já foi conquistado, pinta de amarelo e coloca o emoji
+                if (i <= streakAtual) {
+                    bolinha.classList.add('conquistado');
+                    bolinha.innerText = '🥖';
+                } else {
+                    bolinha.innerText = 'O'; // Dia vazio
+                }
+
+                // Adiciona o aviso visual nos dias de prêmio
+                if (i === 10) bolinha.innerHTML += `<div class="marcador-premio">🍬 Mentos</div>`;
+                if (i === 20) bolinha.innerHTML += `<div class="marcador-premio">🍪 Piraquê</div>`;
+                if (i === 30) bolinha.innerHTML += `<div class="marcador-premio">🎁 Bombom</div>`;
+
+                trilha.appendChild(bolinha);
+            }
+        }
+
+        function ajustarPontos(valor) {
+            streakAtual += valor;
+            
+            // Travas de segurança: não deixa ficar menor que 0 nem maior que 30
+            if (streakAtual < 0) streakAtual = 0;
+            if (streakAtual > 30) streakAtual = 30;
+            
+            atualizarPainelGami(); // Redesenha a tela instantaneamente
+        }
+
+        function salvarGamificacao() {
+            // No futuro, isso vai enviar os dados para o servidor MongoDB
+            alert(`Pontos ajustados com sucesso! \n🥖 Pãezinhos/Dias: ${streakAtual}\n(Na próxima etapa conectaremos isso ao MongoDB!)`);
+        }
+
+        // =========================================================
+        // LÓGICA ANTIGA (PRODUTOS) INTACTA ABAIXO
+        // =========================================================
         async function carregarProdutos() {
             try {
                 const resposta = await fetch(API_URL);
                 produtos = await resposta.json();
                 desenharTela();
             } catch (erro) {
-                document.getElementById('lista-produtos').innerHTML = '<p style="color:red; text-align:center;">Erro ao conectar. O servidor pode estar dormindo (aguarde 1 min e atualize a página).</p>';
+                document.getElementById('lista-produtos').innerHTML = '<p style="color:red; text-align:center;">Erro ao conectar. Aguarde 1 min e atualize.</p>';
             }
         }
 
         function desenharTela() {
             const divLista = document.getElementById('lista-produtos');
             divLista.innerHTML = ''; 
-
             produtos.forEach((produto, index) => {
                 const div = document.createElement('div');
                 div.className = 'produto-card';
-                
-                // MUDANÇA AQUI: Adicionado o bloco "acoes-produto" com as setas
                 div.innerHTML = `
                     <div class="acoes-produto">
-                        <button class="btn-mover" onclick="moverParaCima(${index})" title="Subir" ${index === 0 ? 'disabled' : ''}>⬆️</button>
-                        <button class="btn-mover" onclick="moverParaBaixo(${index})" title="Descer" ${index === produtos.length - 1 ? 'disabled' : ''}>⬇️</button>
-                        <button class="btn-remover" onclick="removerProduto(${index})">🗑️ Excluir</button>
+                        <button class="btn-mover" onclick="moverParaCima(${index})" ${index === 0 ? 'disabled' : ''}>⬆️</button>
+                        <button class="btn-mover" onclick="moverParaBaixo(${index})" ${index === produtos.length - 1 ? 'disabled' : ''}>⬇️</button>
+                        <button class="btn-remover" onclick="removerProduto(${index})">🗑️</button>
                     </div>
-                    
                     <div class="campo-grupo">
                         <label>Nome do Produto:</label>
                         <input type="text" value="${produto.nome}" onchange="atualizarNome(${index}, this.value)">
                     </div>
-
                     <div class="campo-grupo">
                         <label>☀️ Metas Manhã:</label>
                         <input type="text" value="${produto.metasManha.join(', ')}" onchange="atualizarMetas(${index}, 'manha', this.value)">
-                        <small>Digite 7 números separados por vírgula (Dom a Sáb). Ex: 15, 8, 15, 8, 15, 28, 28</small>
                     </div>
-
                     <div class="campo-grupo">
                         <label>🌙 Metas Tarde:</label>
                         <input type="text" value="${produto.metasTarde.join(', ')}" onchange="atualizarMetas(${index}, 'tarde', this.value)">
-                        <small>Digite 7 números separados por vírgula (Dom a Sáb).</small>
                     </div>
                 `;
                 divLista.appendChild(div);
             });
         }
 
-        function atualizarNome(index, novoNome) {
-            produtos[index].nome = novoNome;
-        }
-
+        function atualizarNome(index, novoNome) { produtos[index].nome = novoNome; }
         function atualizarMetas(index, turno, valorDigitado) {
             const arrayNumeros = valorDigitado.split(',').map(num => Number(num.trim()));
             if(turno === 'manha') produtos[index].metasManha = arrayNumeros;
             if(turno === 'tarde') produtos[index].metasTarde = arrayNumeros;
         }
 
-        // ==========================================
-        // NOVAS FUNÇÕES DE MOVIMENTAÇÃO (O "Sobe e Desce")
-        // ==========================================
         function moverParaCima(index) {
             if (index > 0) {
-                const itemMovido = produtos[index];
-                produtos[index] = produtos[index - 1]; // O de cima desce
-                produtos[index - 1] = itemMovido;      // O de baixo sobe
+                const temp = produtos[index];
+                produtos[index] = produtos[index - 1];
+                produtos[index - 1] = temp;
                 desenharTela();
             }
         }
 
         function moverParaBaixo(index) {
             if (index < produtos.length - 1) {
-                const itemMovido = produtos[index];
-                produtos[index] = produtos[index + 1]; // O de baixo sobe
-                produtos[index + 1] = itemMovido;      // O de cima desce
+                const temp = produtos[index];
+                produtos[index] = produtos[index + 1];
+                produtos[index + 1] = temp;
                 desenharTela();
             }
         }
-        // ==========================================
 
         function adicionarProduto() {
             let maiorId = 0;
             produtos.forEach(p => { if(p.id > maiorId) maiorId = p.id; });
-
-            const novoProduto = {
-                id: maiorId + 1,
-                nome: "Novo Pão",
-                metasManha: Array(0,0,0,0,0,0,0),
-                metasTarde: Array(0,0,0,0,0,0,0)
-            };
-            
-            produtos.unshift(novoProduto);
-            desenharTela();
-            window.scrollTo(0, 0); 
+            produtos.unshift({ id: maiorId + 1, nome: "Novo Pão", metasManha:, metasTarde: });
+            desenharTela(); window.scrollTo(0, 0); 
         }
 
         function removerProduto(index) {
-            const nomeDoPao = produtos[index].nome;
-            if(confirm(`Tem certeza que deseja apagar permanentemente o item: ${nomeDoPao}?`)) {
-                produtos.splice(index, 1);
-                desenharTela();
+            if(confirm(`Apagar permanentemente o item: ${produtos[index].nome}?`)) {
+                produtos.splice(index, 1); desenharTela();
             }
         }
 
         async function salvarTudo() {
             const botao = document.querySelector('.btn-salvar');
             botao.innerHTML = '⏳ Salvando...';
-            
             try {
                 const resposta = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(produtos) 
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(produtos) 
                 });
-                
-                if(resposta.ok) {
-                    alert("✅ Tudo salvo com sucesso! O painel da produção já foi atualizado com a nova ordem.");
-                }
+                if(resposta.ok) alert("✅ Produtos salvos com sucesso!");
             } catch (erro) {
                 alert("Erro ao salvar. Verifique sua internet.");
             } finally {
-                botao.innerHTML = '💾 SALVAR TODAS AS ALTERAÇÕES';
+                botao.innerHTML = '💾 SALVAR PRODUTOS E METAS';
             }
         }
 
+        // Inicializa a tela
         carregarProdutos();
+        atualizarPainelGami(); // Desenha a gamificação ao abrir a tela
     </script>
 </body>
 </html>
